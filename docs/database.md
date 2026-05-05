@@ -6,7 +6,7 @@
 
 ## 2. ER-диаграмма
 
-:::mermaid
+```mermaid
 erDiagram
     USERS ||--o{ USER_PROJECTS : has
     PROJECTS ||--o{ USER_PROJECTS : has
@@ -51,7 +51,7 @@ erDiagram
         string changed_by
         timestamp changed_at
     }
-:::
+```
 
 
 ## 3. Описание таблиц
