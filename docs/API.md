@@ -357,3 +357,156 @@ Authorization: Bearer <token>
   "updated_at": "2026-05-13T12:00:00Z"
 }
 ```
+
+**Возможные ошибки:**
+
+- `404 Not Found`
+- `403 Forbidden` — попытка раскрыть секрет без достаточных прав.
+
+
+### 5.3. Создание или обновление ключа
+
+Если ключ с таким именем уже существует, он обновляется (инкрементируется версия, записывается история). Если нет — создаётся новый.
+
+Требует роль `editor` или выше.
+
+**Запрос:**
+```http
+PUT /api/projects/{projectId}/keys/{keyName}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "value": "postgresql://user:pass@host/db",
+  "is_secret": true
+}
+```
+
+**Ответ (200 OK при обновлении, 201 Created при создании):**
+```json
+{
+  "name": "DATABASE_URL",
+  "is_secret": true,
+  "value": "***",
+  "version": 3,
+  "updated_at": "2026-05-13T13:00:00Z"
+}
+```
+
+**Действия сервера:**
+
+- Шифрует значение мастер-ключом.
+- Сохраняет/обновляет запись в таблице `KEYS`.
+- Добавляет запись в `KEYS_HISTORY` (хэш предыдущего значения).
+- Инкрементирует `version` проекта.
+- Возвращает обновлённый ключ.
+
+### 5.4. Удаление ключа
+
+Требует роль `editor` или выше.
+
+**Запрос:**
+```http
+DELETE /api/projects/{projectId}/keys/{keyName}
+Authorization: Bearer <token>
+```
+
+**Ответ (204 No Content)**
+
+**Действия сервера:**
+
+- Удаляет ключ из БД.
+- Инкрементирует `version` проекта.
+
+### 5.5. История изменений ключа
+
+**Запрос:**
+```http
+GET /api/projects/{projectId}/keys/{keyName}/history
+Authorization: Bearer <token>
+```
+
+
+**Ответ (200 OK):**
+```json
+[
+  {
+    "version": 2,
+    "changed_by": "alice",
+    "changed_at": "2026-05-13T11:30:00Z"
+  },
+  {
+    "version": 1,
+    "changed_by": "alice",
+    "changed_at": "2026-05-13T10:40:00Z"
+  }
+]
+```
+
+Каждая запись показывает, какая версия была актуальна до изменения, кто изменил и когда.
+
+
+## 6. Проверка обновлений (Long Polling)
+
+Эндпоинт предназначен для периодического опроса клиентами (Python SDK) с целью получения изменений без постоянного подключения.
+
+**Запрос:**
+```http
+GET /api/projects/{projectId}/updates/check?sinceVersion={currentVersion}
+Authorization: Bearer <token>
+```
+
+**Ответы:**
+
+- **Если версия проекта не изменилась (`project.version == sinceVersion`):**
+```http
+HTTP/1.1 304 Not Modified
+```
+
+**Если есть изменения (`project.version > sinceVersion`):**
+```json
+{
+  "version": 6,
+  "keys": [
+    {
+      "name": "DATABASE_URL",
+      "is_secret": false,
+      "value": "https://new-url.example.com",
+      "version": 3,
+      "updated_at": "2026-05-13T13:00:00Z"
+    }
+  ]
+}
+```
+
+- Возвращается полный список всех ключей проекта (для простоты). Клиент должен обновить локальный кэш и запомнить новую версию.
+
+**Действия сервера:**
+
+- Загружает проект по `projectId`.
+- Проверяет права доступа (минимум `viewer`).
+- Сравнивает `sinceVersion` с `project.version`.
+- Возвращает соответствующий ответ.
+
+## 7. Сводная таблица эндпоинтов
+
+| Метод  | Путь                                     | Аутентификация | Роль   |
+| ------ | ---------------------------------------- | -------------- | ------ |
+| POST   | `/api/auth/register`                     | Нет            | —      |
+| POST   | `/api/auth/login`                        | Нет            | —      |
+| GET    | `/api/users/me`                          | Да             | —      |
+| POST   | `/api/projects`                          | Да             | —      |
+| GET    | `/api/projects`                          | Да             | —      |
+| GET    | `/api/projects/{id}`                     | Да             | viewer |
+| DELETE | `/api/projects/{id}`                     | Да             | owner  |
+| GET    | `/api/projects/{id}/members`             | Да             | viewer |
+| POST   | `/api/projects/{id}/members`             | Да             | owner  |
+| PUT    | `/api/projects/{id}/members/{userId}`    | Да             | owner  |
+| DELETE | `/api/projects/{id}/members/{userId}`    | Да             | owner  |
+| GET    | `/api/projects/{id}/keys`                | Да             | viewer |
+| GET    | `/api/projects/{id}/keys/{name}`         | Да             | viewer |
+| PUT    | `/api/projects/{id}/keys/{name}`         | Да             | editor |
+| DELETE | `/api/projects/{id}/keys/{name}`         | Да             | editor |
+| GET    | `/api/projects/{id}/keys/{name}/history` | Да             | viewer |
+| GET    | `/api/projects/{id}/updates/check`       | Да             | viewer |
+Все идентификаторы (`projectId`, `userId`) являются UUID и передаются как строки.

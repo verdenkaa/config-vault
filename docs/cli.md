@@ -100,7 +100,7 @@ graph TD
 
 ### 4.2. `client.py` — асинхронный HTTP-клиент
 
-Класс `VaultClient` отвечает за все запросы к ConfigVault API. Использует `httpx.AsyncClient` для неблокирующего взаимодействия.
+Класс `VaultClient` отвечает за все запросы к  [ConfigVault API](/docs/API.md). Использует `httpx.AsyncClient` для неблокирующего взаимодействия.
 
 **Основные методы:**
 
@@ -115,6 +115,7 @@ graph TD
 - `get_key_history(project_id, key_name)`.
     
 Все методы асинхронны, перед каждым запросом добавляется заголовок `Authorization: Bearer <токен>`.
+
 
 ### 4.3. `auth_manager.py` — управление токеном
 

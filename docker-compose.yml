@@ -1,0 +1,12 @@
+services:
+  ydb:
+    image: ghcr.io/ydb-platform/local-ydb:nightly
+    ports:
+      - "5432:5432"
+      - "8765:8765"
+    # Переменные окружения для настройки базы данных
+    environment:
+      - YDB_EXPERIMENTAL_PG=1
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=1234
+      - YDB_USE_IN_MEMORY_PDISKS=true
