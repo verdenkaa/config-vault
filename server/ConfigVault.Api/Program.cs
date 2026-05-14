@@ -1,10 +1,11 @@
+using ConfigVault.Api.Data;
+using ConfigVault.Api.Data.Repositories;
+using ConfigVault.Api.Middleware;
+using ConfigVault.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using ConfigVault.Api.Data;
-using ConfigVault.Api.Services;
-using ConfigVault.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,9 +13,24 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+// Репозитории
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IKeyRepository, KeyRepository>();
+builder.Services.AddScoped<IAuditRepository, AuditRepository>();
+
+// Сервисы
+builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IKeyService, KeyService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+
 // Подключаем БД (пока в памяти или закомментировать, если YDB не запущен)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("ConfigVaultDev")); // временно
+
 
 // JWT аутентификация
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -39,9 +55,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Регистрация сервисов и репозиториев (пока заглушки)
-//builder.Services.AddScoped<IUserRepository, UserRepository>();
-
 // Включение CORS
 builder.Services.AddCors(options =>
 {
@@ -51,6 +64,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+
 // 6. Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -59,7 +75,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,4 +1,8 @@
-﻿namespace ConfigVault.Api.Middleware;
+﻿using ConfigVault.Api.Exceptions;
+using System.Net;
+using System.Text.Json;
+
+namespace ConfigVault.Api.Middleware;
 
 public class ExceptionHandlingMiddleware
 {
@@ -17,11 +21,30 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (NotFoundException ex)
+        {
+            await HandleExceptionAsync(context, 404, ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            await HandleExceptionAsync(context, 403, ex.Message);
+        }
+        catch (Exceptions.ValidationException ex)
+        {
+            await HandleExceptionAsync(context, 400, ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { message = "Internal Server Error" });
+            await HandleExceptionAsync(context, 500, "Внутренняя ошибка сервера.");
         }
+    }
+
+    private static async Task HandleExceptionAsync(HttpContext context, int statusCode, string message)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = statusCode;
+        var errorResponse = new { message };
+        await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
     }
 }
