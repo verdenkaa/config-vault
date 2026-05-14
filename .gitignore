@@ -1,1 +1,61 @@
 /.obsidian
+
+### Бинарные файлы и сборки .NET ###
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+# NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/[Pp]ackages/repositories.config
+# Локальные настройки VS
+.vs/
+.vscode/
+launchSettings.json
+# Результаты тестов
+**/TestResults/
+*.trx
+*.coverage
+
+### Python ###
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+# Виртуальное окружение
+.venv/
+venv/
+env/
+# Файлы переменных окружения (локальные)
+.env
+.env.local
+.env.*.local
+
+### Docker ###
+# Тома для хранения данных (если будут использоваться)
+docker-compose.override.yml
+# Игнорируем данные контейнеров (если монтируются локальные папки)
+data/
+
+### Файлы конфигурации с секретами (локальные) ###
+appsettings.Development.json
+appsettings.*.local.json
+*.secret
+!appsettings.json
+
+### Файлы ОС ###
+.DS_Store
+Thumbs.db
+
+### Логи ###
+*.log
+logs/

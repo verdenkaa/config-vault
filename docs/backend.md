@@ -56,45 +56,45 @@ graph TD
 
 Детальная структура директорий и файлов:
 
-    server/
-        ├── ConfigVault.sln
-        └── src/
-            └── ConfigVault.Api/
-                ├── ConfigVault.Api.csproj
-                ├── Program.cs
-                ├── appsettings.json
-                ├── Controllers/
-                │   ├── AuthController.cs
-                │   ├── UsersController.cs
-                │   ├── ProjectsController.cs
-                │   ├── KeysController.cs
-                │   └── UpdatesController.cs
-                ├── Models/
-                │   ├── User.cs
-                │   ├── Project.cs
-                │   ├── Key.cs
-                │   ├── KeyHistory.cs
-                │   ├── LoginRequest.cs
-                │   └── KeyResponse.cs
-                ├── Data/
-                │   ├── AppDbContext.cs
-                │   └── Repositories/
-                │       ├── UserRepository.cs
-                │       ├── ProjectRepository.cs
-                │       ├── KeyRepository.cs
-                │       └── AuditRepository.cs
-                ├── Services/
-                │   ├── UserService.cs
-                │   ├── ProjectService.cs
-                │   ├── KeyService.cs
-                │   ├── EncryptionService.cs
-                │   └── AuditService.cs
-                ├── Middleware/
-                │   └── ExceptionHandlingMiddleware.cs
-                └── Exceptions/
-                    ├── NotFoundException.cs
-                    ├── AccessDeniedException.cs
-                    └── ValidationException.cs
+	server/  
+	├── ConfigVault.sln # Файл решения
+	└── src/  
+		└── ConfigVault.Api/ # Единственный исполняемый проект Web API
+			├── ConfigVault.Api.csproj
+			├── Program.cs # Точка входа, настройка DI, middleware, маршрутов
+			├── appsettings.json # Конфигурация
+			├── Controllers/ # Обработчики HTTP-запросов
+			│    ├── AuthController.cs # Регистрация и вход (логин/пароль → JWT)
+			│    ├── UsersController.cs # Профиль текущего пользователя
+			│    ├── ProjectsController.cs # Управление проектами и участниками
+			│    ├── KeysController.cs # CRUD ключей, просмотр истории
+			│    └── UpdatesController.cs # Проверка обновлений (polling)
+			├── Models/ # Классы предметной области и DTO
+			│    ├── User.cs # Пользователь системы
+			│    ├── Project.cs # Проект (контейнер ключей)
+			│    ├── Key.cs # Ключ (параметр или секрет)
+			│    ├── KeyHistory.cs # Запись истории изменения ключа
+			│    ├── LoginRequest.cs # DTO для запроса входа
+			│    └── KeyResponse.cs # DTO ответа с ключом (включая маскированное значение)
+			├── Data/ # Доступ к БД  
+			│    ├── AppDbContext.cs # Контекст EF Core, DbSet-ы, конфигурация связей
+			│    └── Repositories/ # Реализации репозиториев (паттерн Repository)
+			│        ├── UserRepository.cs # Запросы к таблице USERS
+			│        ├── ProjectRepository.cs # Запросы к PROJECTS, USER_PROJECTS
+			│        ├── KeyRepository.cs # Запросы к KEYS
+			│        └── AuditRepository.cs # Запись в KEYS_HISTORY
+			├── Services/ # Бизнес-логика приложения
+			│    ├── UserService.cs # Регистрация, аутентификация, хеширование паролей
+			│    ├── ProjectService.cs # Управление проектами, проверка ролей  
+			│    ├── KeyService.cs # CRUD ключей, версионирование, шифрование  
+			│    ├── EncryptionService.cs # AES-шифрование/расшифровка значений  
+			│    └── AuditService.cs # Запись событий в KEYS_HISTORY  
+			├── Middleware/ # Компоненты конвейера обработки запросов  
+			│    └── ExceptionHandlingMiddleware.cs # Преобразует исключения в HTTP-ответы  
+			└── Exceptions/ # Кастомные типы ошибок  
+				├── NotFoundException.cs # 404, если сущность не найдена  
+				├── AccessDeniedException.cs # 403, недостаточно прав  
+				└── ValidationException.cs # 400, некорректные входные данные
 
 
 ## 4. Основные компоненты и их взаимодействие
